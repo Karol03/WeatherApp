@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Timers;
+using System.Windows;
 using System.Windows.Threading;
 
 namespace ProjektDotNet
@@ -24,21 +25,33 @@ namespace ProjektDotNet
             aTimer.Enabled = true;
         }
 
+        static public void ChangeRefreshTime(int value)
+        {
+            if (value < 5)
+            {
+                throw new ArgumentException("Value is too small");
+            }
+            refreshTimePeriodInSeconds = value;
+            aTimer.Stop();
+            aTimer.Interval = refreshTimePeriodInSeconds * OneSecond;
+            aTimer.Start();
+        }
+
         static public void SetAction(Action action_)
         {
             action = action_;
         }
         
-        private void Observe(Object source, ElapsedEventArgs e)
+        async private void Observe(Object source, ElapsedEventArgs e)
         {
             foreach(var city in watchedCities)
             {
-                WeatherGetter.TryGetAsync(GetURL(city), city.name);
+                await WeatherGetter.TryGetAsync(GetURL(city), city.name);
             }
             try
             {
                 Console.WriteLine("REFRESH");
-                Dispatcher.CurrentDispatcher.BeginInvoke(DispatcherPriority.Normal, action);
+                Application.Current.Dispatcher.Invoke(action);
             }
             catch (Exception m)
             {

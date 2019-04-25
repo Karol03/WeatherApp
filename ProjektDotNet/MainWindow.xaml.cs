@@ -98,8 +98,9 @@ namespace ProjektDotNet
             RefreshChart();
         }
 
-        private void RefreshChart()
+        public void RefreshChart()
         {
+            Console.WriteLine("refresh chart method");
             Chart = Plotter.DrawChartOf(activeCityName);
             Chart.InvalidatePlot(true);
             ChartView.GetBindingExpression(PlotView.ModelProperty).UpdateTarget();
@@ -108,6 +109,58 @@ namespace ProjektDotNet
         private void ListBox_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             RefreshChart();
+        }
+
+        private void TextBox1_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (System.Text.RegularExpressions.Regex.IsMatch(textBox1.Text, "[^0-9]"))
+            {
+                MessageBox.Show("Please enter only numbers.",
+                                "Info",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+                textBox1.Clear();
+            }
+        }
+
+        private void Button2_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var value = int.Parse(textBox1.Text);
+                WeatherObserver.ChangeRefreshTime(value);
+                textBox1.Text = "5";
+                String msg = "Refresh frequency was changed to 1 per ";
+                int hours = value / 3600;
+                int minutes = (value % 3600) / 60;
+                int seconds = (value % 60);
+
+                if (hours > 0)
+                {
+                    msg += hours + "h ";
+                }
+                if (minutes > 0)
+                {
+                    msg += minutes + "m ";
+                }
+                if (seconds> 0)
+                {
+                    msg += seconds + "s";
+                }
+                MessageBox.Show(msg,
+                                "Info",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+            }
+            catch (ArgumentException exc)
+            {
+                MessageBox.Show(exc.Message,
+                                "Info",
+                                MessageBoxButton.OK,
+                                MessageBoxImage.Information);
+            }
+            catch (Exception)
+            {}
         }
     }
 }
