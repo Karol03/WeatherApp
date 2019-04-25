@@ -11,12 +11,33 @@ namespace ProjektDotNet
 {
     class Plotter
     {
-        static public PlotModel DrawChartOf(String cityName)
+        static private List<int> GetListOfValues(String s)
         {
+            Console.WriteLine("GetListOfValues(String s)");
+            List<int> ls = new List<int>();
+            String number = "";
+            foreach (var c in s)
+            {
+                if (c == ' ')
+                {
+                    ls.Add(int.Parse(number));
+                    number = "";
+                }
+                else
+                {
+                    number += c;
+                }
+            }
+            return ls;
+        }
+
+        async static public Task<PlotModel> DrawChartOf(String cityName)
+        {
+            Console.WriteLine("DrawChartOf(String cityName)");
             try
             {
                 Console.WriteLine(cityName);
-                var city = WeatherGetter.GetCity(cityName);
+                var city = await WeatherGetter.GetCity(cityName);
          
                 var plot = new PlotModel
                 {
@@ -24,8 +45,8 @@ namespace ProjektDotNet
                     Subtitle = "Clouds: " + city.Clouds
                 };
 
-                var temps = CityDB.Convert(city.Temps);
-                var humidity = CityDB.Convert(city.Humidity);
+                var temps = ShrinkToXAxis(GetListOfValues(city.Temps));
+                var humidity = ShrinkToXAxis(GetListOfValues(city.Humidity));
 
                 int temp_min = temps.Min() - 2;
                 int temp_max = temps.Max() + 2;
@@ -66,7 +87,7 @@ namespace ProjektDotNet
                 });
 
                 plot.Series.Add(CreateSeriesOf(temps, "Temperature"));
-                plot.Series.Add(CreateSeriesOf(humidity, "Humidity", (double)temp_min, (double)temp_max));
+                plot.Series.Add(CreateScaledSeriesOf(humidity, "Humidity", (double)temp_min, (double)temp_max));
                 return plot;
             }
             catch (Exception)
@@ -74,8 +95,22 @@ namespace ProjektDotNet
             return CreateDefaultChart();
         }
 
+        private static List<int> ShrinkToXAxis(List<int> ls)
+        {
+            Console.WriteLine("ShrinkToXAxis(List<int> ls)");
+            int MAX_SIZE = 26;
+            var count = ls.Count;
+            if (count <= MAX_SIZE)
+            {
+                return ls;
+            }
+            ls.RemoveRange(0, count - MAX_SIZE);
+            return ls;
+        }
+
         private static LineSeries CreateSeriesOf(List<int> values, String title)
         {
+            Console.WriteLine("CreateSeriesOf(List<int> values, String title)");
             var ls = new LineSeries
             {
                 Title = title
@@ -90,7 +125,7 @@ namespace ProjektDotNet
             return ls;
         }
 
-        private static LineSeries CreateSeriesOf(List<int> values, String title, double min, double max)
+        private static LineSeries CreateScaledSeriesOf(List<int> values, String title, double min, double max)
         {
             var ls = new LineSeries
             {

@@ -44,24 +44,37 @@ namespace ProjektDotNet
         
         async private void Observe(Object source, ElapsedEventArgs e)
         {
-            foreach(var city in watchedCities)
+            bool IsAnyRefresh = false;
+            aTimer.Stop();
+            foreach (var city in watchedCities)
             {
+                IsAnyRefresh = true;
+                Console.WriteLine("Observe(Object source, ElapsedEventArgs e)");
                 await WeatherGetter.TryGetAsync(GetURL(city), city.name);
             }
             try
             {
-                Console.WriteLine("REFRESH");
-                Application.Current.Dispatcher.Invoke(action);
+                if (IsAnyRefresh)
+                {
+                    Console.WriteLine("REFRESH");
+                    Application.Current.Dispatcher.Invoke(action);
+                }
             }
             catch (Exception m)
             {
                 Console.WriteLine(m.Message);
             }
+            aTimer.Start();
         }
 
         public bool IsCityWatched(City city)
         {
-            return watchedCities.Contains(city);
+            var result = watchedCities.SingleOrDefault(c => c.name == city.name);
+            if (result != null)
+            {
+                return true;
+            }
+            return false;
         }
 
         async public Task<bool> AddCityAsync(City city)

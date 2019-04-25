@@ -35,6 +35,17 @@ namespace ProjektDotNet
             WeatherObserver.SetAction(RefreshChart);
             DataContext = this;
             Chart = Plotter.CreateDefaultChart();
+            InitializeCitiesList();
+        }
+
+        async private void InitializeCitiesList()
+        {
+            var citiesNames = WeatherGetter.GetAllCitiesNamesFromDatabase();
+            foreach(var name in citiesNames)
+            {
+                ListBox.Items.Add(name);
+                await weatherObserver.AddCityAsync(new City(name));
+            }
         }
 
         async private Task<bool> TryAddCityAsync(City city)
@@ -90,6 +101,7 @@ namespace ProjektDotNet
             String cityName = Convert.ToString(ListBox.SelectedItem);
             ListBox.Items.Remove(ListBox.SelectedItem);
             weatherObserver.RemoveCity(cityName);
+            WeatherGetter.RemoveCity(cityName);
         }
 
         private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -98,11 +110,12 @@ namespace ProjektDotNet
             RefreshChart();
         }
 
-        public void RefreshChart()
+        async public void RefreshChart()
         {
-            Console.WriteLine("refresh chart method");
-            Chart = Plotter.DrawChartOf(activeCityName);
+            Console.WriteLine("RefreshChart()");
+            Chart = await Plotter.DrawChartOf(activeCityName);
             Chart.InvalidatePlot(true);
+            Console.WriteLine("ChartView.GetBindingExpression(PlotView.ModelProperty).UpdateTarget()");
             ChartView.GetBindingExpression(PlotView.ModelProperty).UpdateTarget();
         }
 
